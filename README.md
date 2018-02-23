@@ -6,7 +6,7 @@
 
 ### New stuff
 
-* `gfit.py`
+* `src/gfit.py`
 A module for GRB light curves fitting
 
 * `notebooks/curve_fit.ipynb`
@@ -23,10 +23,15 @@ First set the python environment:
 
 Then:
 * type `jupyther notebook` to open the notebooks or
-* type `ipython --pylab` and:
+* with `ipython --pylab` (using the curve fit main program):
    ```
    > import curve_fit
    > curve_fit.main()
+   ```
+   or for example (using the gfit module):
+   ```
+   > import gfit
+   > curve_fit.plot_model_ax()
    ```
 
 ### Old stuff
