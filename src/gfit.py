@@ -22,9 +22,6 @@ from scipy.stats import chisquare
 import scipy.stats as stats
 import os
 
-# Constants
-PI = 3.14
-
 # --- Constants
 msun = 1.989                        # units of 10^33 gr
 G=6.67*1.e-8                        # Gravitational constant
@@ -33,20 +30,32 @@ r0 = 1.2                            # units of 10 km (10^6 cm)
 M=1.4
 be=G*msun*1.e7*M/(r0*c**2)          # compactness
 Ine=(0.247+0.642*be+0.466*be**2)*msun*M*r0**2  # from Lattimer & Prakash
-alphax=0.9                          # Alpha parameter of new model
 
+## alphax=0.9                          # Alpha parameter of new model
+
+
+# >>> Parameters for the K correction (to move in the right block)
 # Range for the data
-E01=0.3
-E02=10.0
+# Per convertire i dati nella luminosita' bolometrica (a cui si riferisce il modello)
+## E01=0.3
+## E02=10.0
 # Range for the computation
-E1=1.0
-E2=10000.
+## E1=1.0
+## E2=10000.
+# Beta letto dalla tabella dei GRB
 
 # --- Initial values of model parameters
-B = 25.0                            # Magnetic field in units of 10^14 Gauss= 1/(gr*cm*s)
-spini = 5.                          # initial spin period in units of ms >1ms
-omi = 2.0*np.pi/spini               # initial spin frequency 2pi/spini = 6.28 10^3 Hz
-k=0.4                               # k=4*epsilon_e kind of radiative efficiency
+## B = 25.0                            # (*) Magnetic field in units of 10^14 Gauss= 1/(gr*cm*s)
+## spini = 5.                          # (*) initial spin period in units of ms >1ms
+## omi = 2.0*np.pi/spini               # (*) initial spin frequency 2pi/spini = 6.28 10^3 Hz
+## k=0.4                               # (*) k=4*epsilon_e kind of radiative efficiency
+
+## E0 = 1                              # frozen (in the function)
+
+# -- ... --
+## fb = 1
+# Tempo di inizio del plateau (dal file beta...)
+## startTxrt = 100.
 
 def read():
     '''
@@ -54,11 +63,7 @@ def read():
     '''
     pass
 
-startTxrt = 100.
-
-fb = 1
-E0 = 1
-def model_old(logt,k,B,omi):
+def model_old(logt, k, B, omi, E0=1, fb=1, startTxrt=100):
     """
     Description: Energy evolution inside the external shock as due to radiative losses+energy injection
     (Dall'Osso et al. 2011) assuming pure magnetic dipole, as function of
@@ -71,17 +76,17 @@ def model_old(logt,k,B,omi):
 
     Usage: model_old(logt,k,B,omi)
     """
-    t=10.**logt
+    t = 10.**logt
 
-    a1=2.*(Ine*c**3*1.e5/r0**6)/(B**2.*omi**2.)
-    t00=startTxrt # will be in the function
-    Ein=0.5*Ine*omi**2          # --> 0.7*omi**2   #10^51 erg
-    Li=Ein/a1                 # Li=(0.7*B**2*omi**4)/(3.799*10**6)
+    a1 = 2.*(Ine*c**3*1.e5/r0**6)/(B**2.*omi**2.)
+    t00 = startTxrt
+    Ein = 0.5*Ine*omi**2          # --> 0.7*omi**2   #10^51 erg
+    Li = Ein/a1                 # Li=(0.7*B**2*omi**4)/(3.799*10**6)
 
-    hg1_old=fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t00/a1))
-    hg2_old=fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t/a1))
+    hg1_old = fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t00/a1))
+    hg2_old = fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t/a1))
 
-    f_old=(k/t)*(1./(1. + k))*t**(-k)*(E0*t00**k + E0*t00**k - Li*t00**(1+k)*hg1_old + Li*t**(1. + k)*hg2_old)
+    f_old = (k/t)*(1./(1. + k))*t**(-k)*(E0*t00**k + E0*t00**k - Li*t00**(1+k)*hg1_old + Li*t**(1. + k)*hg2_old)
 
     return np.log10(f_old)
 
@@ -94,7 +99,7 @@ def plot_model_old(tmin=-1., tmax=6.):
     plt.legend()
     plt.show()
 
-def model_ax(logt,k,B,omi):
+def model_ax(logt, k, B, omi, E0=1, fb=1, startTxrt=100, alphax=0.9):
     """
     Description: Energy evolution inside the external shock as due to radiative losses+energy injection
     introducing the Contopoulos and Spitkovsky 2006 formula assuming alphax, as function of
