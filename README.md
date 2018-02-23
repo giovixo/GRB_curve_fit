@@ -23,7 +23,11 @@ First set the python environment:
 
 Then:
 * type `jupyther notebook` to open the notebooks or
-* type `python curve_fit.py` to run the script.
+* type `ipython --pylab` and:
+   ```python
+   > import curve_fit
+   > curve_fit.main()
+   ```
 
 ### Old stuff
 

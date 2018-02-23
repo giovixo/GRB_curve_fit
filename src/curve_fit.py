@@ -7,6 +7,9 @@ def main():
     print "---------------------------------------------------------"
     # Import the gfit module
     import gfit
+    # Plot models
+    gfit.plot_model_old()
+    gfit.plot_model_ax()
 
 
 if __name__ == "__main__":
