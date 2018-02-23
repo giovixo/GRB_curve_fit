@@ -24,7 +24,7 @@ First set the python environment:
 Then:
 * type `jupyther notebook` to open the notebooks or
 * type `ipython --pylab` and:
-   ```python
+   ```
    > import curve_fit
    > curve_fit.main()
    ```
