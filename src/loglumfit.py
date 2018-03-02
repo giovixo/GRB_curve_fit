@@ -251,7 +251,7 @@ def model_old(logt,k,B,omi):
     hg1_old=fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t00/a1))
     hg2_old=fb*scipy.special.hyp2f1(2., 1. + k, 2. + k, -(t/a1))
 
-    f_old=(k/t)*(1./(1. + k))*t**(-k)*(E0*t00**k + E0*t00**k - Li*t00**(1+k)*hg1_old + Li*t**(1. + k)*hg2_old)
+    f_old=(k/t)*(1./(1. + k))*t**(-k)*(E0*t00**k + E0*k*t00**k - Li*t00**(1+k)*hg1_old + Li*t**(1. + k)*hg2_old)
     return np.log10(f_old)
 
 
