@@ -58,7 +58,9 @@ def info():
     """
     Print some infos
     """
-    print("GFIT: a module to fit GRB light curves")
+    print "---------------------------------------------------------"
+    print "GFIT: fantastic code that fits thousands of data         "
+    print "---------------------------------------------------------"
 
 def read(fi='050603', Tt=0, thetajetstr="90"):
     '''
