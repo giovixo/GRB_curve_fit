@@ -1,9 +1,32 @@
+## alphax=0.9                          # Alpha parameter of new model
+
+
+# >>> Parameters for the K correction (to move in the right block)
+# Range for the data
+# Per convertire i dati nella luminosita' bolometrica (a cui si riferisce il modello)
+## E01=0.3
+## E02=10.0
+# Range for the computation
+## E1=1.0
+## E2=10000.
+# Beta letto dalla tabella dei GRB
+
+# --- Initial values of model parameters
+## B = 25.0                            # (*) Magnetic field in units of 10^14 Gauss= 1/(gr*cm*s)
+## spini = 5.                          # (*) initial spin period in units of ms >1ms
+## omi = 2.0*np.pi/spini               # (*) initial spin frequency 2pi/spini = 6.28 10^3 Hz
+## k=0.4                               # (*) k=4*epsilon_e kind of radiative efficiency
+
+## E0 = 1                              # frozen (in the function)
+
+# -- ... --
+## fb = 1
+# Tempo di inizio del plateau (dal file beta...)
+## startTxrt = 100.
+
 """
 A module to fit GRB light curves
-
-Require python 3
 """
-
 
 def info():
     """
@@ -31,37 +54,91 @@ M=1.4
 be=G*msun*1.e7*M/(r0*c**2)          # compactness
 Ine=(0.247+0.642*be+0.466*be**2)*msun*M*r0**2  # from Lattimer & Prakash
 
-## alphax=0.9                          # Alpha parameter of new model
-
-
-# >>> Parameters for the K correction (to move in the right block)
-# Range for the data
-# Per convertire i dati nella luminosita' bolometrica (a cui si riferisce il modello)
-## E01=0.3
-## E02=10.0
-# Range for the computation
-## E1=1.0
-## E2=10000.
-# Beta letto dalla tabella dei GRB
-
-# --- Initial values of model parameters
-## B = 25.0                            # (*) Magnetic field in units of 10^14 Gauss= 1/(gr*cm*s)
-## spini = 5.                          # (*) initial spin period in units of ms >1ms
-## omi = 2.0*np.pi/spini               # (*) initial spin frequency 2pi/spini = 6.28 10^3 Hz
-## k=0.4                               # (*) k=4*epsilon_e kind of radiative efficiency
-
-## E0 = 1                              # frozen (in the function)
-
-# -- ... --
-## fb = 1
-# Tempo di inizio del plateau (dal file beta...)
-## startTxrt = 100.
-
-def read():
+def read(fi='050603', Tt=0, thetajetstr="90"):
     '''
     Reads data from X-ray afterglow luminosity light curves
+
+    Return (data_array, startTxrtFromFile, fb)
+
+    Usage:
+    (data, time, fb) = read(fi='050603', Tt=0, thetajetstr="90")
     '''
-    pass
+    # Path for the output (it is used as a flag in this function)
+    path1="./output/LGRB_golden_Tt_EV_thetajet_k4_new/"
+
+    # Define the filename
+    path = '/Users/giovanni/Works/GRB/GRB_curve_fit/TimeLuminosityLC/'
+    filename = path + fi + 'TimeLuminosityLC.txt'
+    # Read the data
+    data=pd.read_csv(filename,comment='!', sep='\t', header=None,skiprows=None,skip_blank_lines=True)
+    # Data cleaning
+    data_array = data.values
+    table    = data_array[np.logical_not(np.isnan(data_array[:,0])),:]
+    dlogtime = table[:,1]
+    dloglum  = table[:,3]
+
+    # Read beta and Tstart from file
+    filein=path+'beta_parameters_and_Tt.dat'
+    dataparam=pd.read_csv(filein,comment='!', sep='\t', header=None,skiprows=None,skip_blank_lines=True)
+    dataparam_array=dataparam.values
+    print "Index for ",fi," : ", np.where(dataparam_array==fi)
+    datafi=dataparam_array[np.where(dataparam_array[:,0]==fi)]
+    datafiflat=datafi.flatten()
+    z=float(datafiflat[1])
+    beta=float(datafiflat[2])
+    dbeta=float(datafiflat[3])
+    Tt=float(datafiflat[5])
+
+    # luminosity correction from E01,E02 to E1,E2 (see Dainotti et al 2013)
+    # Range for the data
+    E01=0.3
+    E02=10.0
+    # Range for the computation
+    E1=1.0
+    E2=10000.
+    Kcorr = (E2**(1.-beta+1.e-8) - E1**(1.-beta+1.e-8))/(E02**(1.-beta+1.e-8) - E01**(1.-beta+1.e-8))
+
+    # Correct the luminosity and time for cosmological EVoloution
+    if 'EV' in path1:
+        loglum=table[:,2]-51+np.log10(Kcorr)+0.05*np.log10(1+z)
+        logtime=table[:,0]+0.85*np.log10(1+z)
+    else:
+        loglum=table[:,2]-51+np.log10(Kcorr)
+        logtime=table[:,0]
+
+    #   Correct also the Tstart time for cosmological EV.
+    if Tt > 0.0 :
+        if 'EV' in path1:
+            startTxrtFromFile=(10**Tt)/((1.+z)*(1+z)**(-0.85))
+        else:
+            startTxrtFromFile=(10**Tt)/(1.+z)
+    if Tt == 0.0 :
+        startTxrtFromFile=0.0
+
+    # --- Corregge i dati ed il modello per il beaming del getto (see theta_jet_only.dat)
+    # 90 means NOT collimated
+    # thetajetstr=raw_input('theta_jet [90.0]:') or "90.0"
+    thetajrad=float(thetajetstr)*(np.pi/180.0)
+    #logaritmo del fattore di collimazione
+    f=np.log10((1-np.cos(thetajrad)))
+
+    # sort times and riassess lum vector
+    index=np.argsort(logtime)
+    # ---
+    ltime=logtime[index] # my x
+    llum=loglum[index]+f # my y
+    dllum=dloglum[index] # my err_y (+f or NOT +f?)
+
+    # Discussion?
+    if 'isoNS' in path1:
+        fb=10.0**f
+        print '!! jet beaming correction applied to model with fb= ,'+str(fb)+' !!'
+    else:
+        fb=1.0
+        print '!! No jet beaming correction applied to model with fb=,'+str(fb)+' !!'
+
+    return (data_array, startTxrtFromFile, fb)
+
 
 def model_old(logt, k, B, omi, E0=1, fb=1, startTxrt=100):
     """
