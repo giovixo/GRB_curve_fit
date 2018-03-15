@@ -28,12 +28,6 @@
 A module to fit GRB light curves
 """
 
-def info():
-    """
-    Print some infos
-    """
-    print("GFIT: a module to fit GRB light curves")
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,6 +47,18 @@ r0 = 1.2                            # units of 10 km (10^6 cm)
 M=1.4
 be=G*msun*1.e7*M/(r0*c**2)          # compactness
 Ine=(0.247+0.642*be+0.466*be**2)*msun*M*r0**2  # from Lattimer & Prakash
+
+# --- Initial values of model parameters
+B = 25.0                            # Magnetic field in units of 10^14 Gauss= 1/(gr*cm*s)
+spini = 5.                          # initial spin period in units of ms >1ms
+omi = 2.0*np.pi/spini               # initial spin frequency 2pi/spini = 6.28 10^3 Hz
+k=0.4                               # k=4*epsilon_e kind of radiative efficiency
+
+def info():
+    """
+    Print some infos
+    """
+    print("GFIT: a module to fit GRB light curves")
 
 def read(fi='050603', Tt=0, thetajetstr="90"):
     '''
